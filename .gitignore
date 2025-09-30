@@ -1,0 +1,21 @@
+# secrets
+.env
+docker-compose.yaml
+keys/
+*.json
+airflow.cfg
+
+# Dev bloat
+.venv
+*.pyc
+__pycache__/
+tmp/
+logs/
+*.log
+.vscode/
+
+# dbt 
+profiles.yml
+.user.yml
+dbt_packages/
+package-lock.yml

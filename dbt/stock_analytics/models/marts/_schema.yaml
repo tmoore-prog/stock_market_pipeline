@@ -1,0 +1,331 @@
+models:
+  - name: fct_trading_momentum
+    description: |
+      Daily trading signals and technical indicators for Russell 3000 constituents.
+      
+      Contains price movements, moving averages, volume metrics, and trading signals
+      updated daily via incremental load. Each row represents one ticker-date combination
+      with pre-calculated technical indicators for efficient querying.
+      
+      **Update Frequency**: Daily at market close + 1 day
+      **Grain**: One row per ticker per trade_date
+      **History**: 2+ years rolling window
+      **Row Count**: ~1.3M and growing daily
+
+    columns:
+      - name: ticker
+        description: Stock ticker symbol (e.g., AAPL, MSFT)
+        tests: 
+          - not_null
+
+      - name: trade_date
+        description: Trading date (excludes weekends/holidays)
+        tests:
+          - not_null
+
+      - name: volume
+        description: |
+          Daily trading volume (number of shares traded).
+          Used to confirm price movements and calculate relative volume.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+              inclusive: false
+
+      - name: open
+        description: Opening price for the trading day
+
+      - name: close
+        description: Closing price for the trading day
+
+      - name: high
+        description: Highest price reached during the trading day
+
+      - name: low
+        description: Lowest price reached during the trading day
+
+      - name: yesterday_close
+        description: |
+          Previous trading day's closing price.
+          Used for calculating daily returns and price changes.
+
+      - name: sector
+        description: |
+          GICS sector classification (e.g., Technology, Healthcare).
+          Inherited from Russell 3000 constituent data.
+
+      - name: company
+        description: Company name associated with ticker
+
+      - name: sma_20
+        description: |
+          20-day Simple Moving Average.
+          NULL if < 20 days history available.
+          Used for short-term trend identification.
+
+      - name: sma_50
+        description: |
+          50-day Simple Moving Average.
+          NULL if < 50 days history available.
+          Used for medium-term trend identification.
+
+      - name: sma_200
+        description: |
+          200-day Simple Moving Average.
+          NULL if < 200 days history available.
+          Used for long-term trend identification.
+      
+      - name: high_52week
+        description: |
+          Rolling 52-week (252 trading day) maximum price.
+          NULL if < 252 days history.
+          Indicates resistance levels and recent performance.
+
+      - name: bullish_crossover
+        description: |
+          Price crossed above SMA-20 signal.
+          1 = Crossover occurred today (bullish)
+          0 = No crossover
+
+      - name: golden_cross
+        description: |
+          SMA-50 crossed above SMA-200 signal.
+          1 = Golden cross today (major bullish signal)
+          0 = No golden cross
+          Note: Requires 200+ days history.
+      
+      - name: death_cross
+        description: |
+          SMA-50 crossed below SMA-200 signal.
+          1 = Death cross today (bearish signal)
+          0 = No death cross
+
+      - name: rel_vol
+        description: |
+          Relative volume vs 20-day average.
+          > 1.0 = Above average (increased interest)
+          < 1.0 = Below average (decreased interest)
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              min_value: 0
+              row_condition: "rel_vol IS NOT NULL"
+              strictly: true
+
+      - name: avg_gain_14
+        description: |
+          Average gain over 14-day period (used in RSI calculation).
+          Only includes positive price movements.
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              min_value: 0
+              row_condition: "avg_gain_14 IS NOT NULL"
+              
+      - name: avg_loss_14
+        description: |
+          Average loss over 14-day period (used in RSI calculation).
+          Only includes negative price movements.
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              min_value: 0
+              row_condition: "avg_loss_14 IS NOT NULL"
+
+      - name: rsi 
+        description: |
+          Relative Strength Index (14-day).
+          Range: 0-100
+          > 70 = Overbought territory
+          < 30 = Oversold territory
+          NULL if < 14 days history.
+
+    tests:
+      - unique:
+          column_name: "CONCAT(ticker, '-', CAST(trade_date AS STRING))"
+          config:
+            where: "trade_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY)"
+
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          compare_model: ref('int_russell3000__daily')
+      
+  - name: agg_daily_market_breadth
+    description: |
+      Market-wide health and momentum indicators aggregated daily.
+      
+      Tracks advances/declines, volume flows, and breadth metrics across
+      the Russell 3000 universe to gauge overall market health.
+      
+      **Update Frequency**: Daily at market close + 1 day
+      **Grain**: One row per trade_date
+      **History**: 2+ years
+      **Row Count**: ~500 rows
+
+    columns:
+      - name: trade_date
+        description: Trading date
+        tests:
+          - not_null
+          - unique
+      
+      - name: stocks_traded
+        description: Count of stocks with data that day
+        tests:
+          - not_null
+
+      - name: unchanged_stocks
+        description: Count of stocks with no price change from previous day
+    
+      - name: advances
+        description: Stocks closing higher than previous day
+
+      - name: declines
+        description: Stocks closing lower than previous day
+
+      - name: pct_market_over_sma20
+        description: |
+          Percent of stocks above 20-day SMA.
+          > 0.8 = Strong bullish breadth
+          < 0.2 = Strong bearish breadth
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              min_value: 0
+              row_condition: "pct_market_over_sma20 IS NOT NULL"
+      
+      - name: market_rsi
+        description: |
+          Average RSI across all stocks.
+          > 70 = Market overbought
+          < 30 = Market oversold
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+              row_condition: "market_rsi IS NOT NULL"
+
+      - name: ad_line
+        description: |
+          Cumulative advance-decline line.
+          Rising = Healthy market breadth
+          Divergence from index = Warning signal
+
+      - name: normalized_ad_ratio
+        description: |
+          (Advances - Declines) / Total Stocks.
+          Range: -1 to +1
+          > 0.6 = Broad rally
+          < -0.6 = Broad decline
+
+      - name: up_volume
+        description: |
+          Total trading volume for advancing stocks.
+          Used with down_volume to calculate volume ratios.
+
+      - name: down_volume
+        description: |
+          Total trading volume for declining stocks.
+          Used with up_volume to calculate volume ratios.
+
+      - name: up_down_volume_ratio
+        description: |
+          Volume in advancing stocks / Volume in declining stocks.
+          > 2.0 = Strong buying pressure
+          < 0.5 = Strong selling pressure
+
+      - name: new_highs
+        description: Count of stocks hitting 52-week highs
+
+      - name: new_lows
+        description: Count of stocks hitting 52-week lows
+
+      - name: high_low_index
+        description: |
+          New highs / (New highs + New lows).
+          10-day smoothed average.
+          > 0.7 = Bullish momentum
+          < 0.3 = Bearish momentum
+
+  - name: dim_securities_current
+    description: |
+      Latest snapshot of all Russell 3000 constituents with current metrics.
+      
+      One-stop reference for current state of each security including
+      latest prices, technical indicators, performance metrics, and signals.
+      Refreshed daily, replacing previous snapshot.
+      
+      **Update Frequency**: Daily at market close + 1 day
+      **Grain**: One row per ticker (latest values only)
+      **Row Count**: ~2,500 (active Russell 3000 members)
+
+    columns:
+      - name: ticker
+        description: Stock ticker symbol
+        tests:
+          - not_null
+          - unique
+
+      - name: company
+        description: Company name
+
+      - name: sector
+        description: GICS sector classification
+
+      - name: latest_volume
+        description: Most recent day's trading volume
+
+      - name: latest_close
+        description: Most recent closing price
+
+      - name: return_1d
+        description: |
+          Daily return percentage.
+          (close - prev_close) / prev_close
+
+      - name: return_1m
+        description: One-month return percentage
+
+      - name: return_3m
+        description: Three-month return percentage
+
+      - name: return_ytd
+        description: Year-to-date return percentage
+
+      - name: pct_distance_from_52week_high
+        description: |
+          Distance from 52-week high as percentage.
+          0.10 = 10% below recent high
+          Indicates momentum and potential resistance.
+
+      - name: volatility_20d
+        description: |
+          Annualized 20-day volatility.
+          0.20 = 20% annual volatility (typical)
+          0.40+ = High volatility
+          NULL if < 20 days history.
+
+      - name: performance_percentile
+        description: |
+          Rank vs all stocks (1-month return).
+          0.90 = Top 10% performer
+          0.10 = Bottom 10% performer
+
+      - name: outperformance_vs_sector
+        description: |
+          Individual return minus sector average (1-month).
+          Positive = Beating sector
+          Negative = Lagging sector
+
+      - name: has_golden_cross_active
+        description: |
+          Current golden cross state.
+          1 = SMA-50 above SMA-200 (bullish)
+          0 = SMA-50 below SMA-200 (bearish)
+
+      - name: days_over_sma50
+        description: |
+          Consecutive days closing above SMA-50.
+          NULL if currently below SMA-50.
+          Indicates trend persistence.
+
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 2000  
+          max_value: 3000
+    

@@ -1,0 +1,109 @@
+models:
+  - name: int_russell3000__daily
+    description: |
+      Filtered and enriched daily stock data for Russell 3000 constituents.
+      
+      This incremental table joins market data with Russell 3000 constituency
+      information, providing point-in-time accurate index membership and 
+      calculating key derived metrics like yesterday's close.
+      
+      **Update Frequency**: Daily at market close + 1 day
+      **Grain**: One row per ticker per trade date
+      **History**: 2+ years
+      **Materialization**: Incremental (merge strategy)
+      **Unique Key**: [ticker, trade_date]
+
+    columns:
+      - name: ticker
+        description: Stock ticker symbol
+        tests:
+          - not_null
+
+      - name: trade_date
+        description: Trading date (market days only)
+        tests:
+          - not_null
+
+      - name: volume
+        description: Daily trading volume (shares traded)
+
+      - name: volume_weighted_avg
+        description: |
+          Volume-weighted average price (VWAP) for the day.
+          Represents the average price weighted by volume.
+
+      - name: open
+        description: Opening price for the trading session
+
+      - name: close
+        description: Closing price for the trading session
+
+      - name: high
+        description: Highest price during the trading session
+
+      - name: low
+        description: Lowest price during the trading session
+
+      - name: num_transactions
+        description: |
+          Total number of trades executed during the day.
+          Indicates trading activity beyond just volume.
+
+      - name: ingested_at
+        description: |
+          Timestamp when data was loaded into raw table.
+          Used for audit and data freshness tracking.
+
+      - name: has_volume
+        description: |
+          Binary flag for volume presence.
+          1 = Trading volume > 0
+          0 = No volume (possible halt or holiday)
+
+      - name: is_valid_record
+        description: |
+          Data quality flag.
+          1 = Passes validation (prices logical, volume present)
+          0 = Failed validation checks
+
+      - name: sector
+        description: |
+          GICS sector classification from Russell 3000 constituent data.
+          Updates with index rebalancing.
+
+      - name: company
+        description: Company name from Russell 3000 constituent data
+
+      - name: index_weight
+        description: |
+          Weight in Russell 3000 index as percentage.
+          Updates quarterly with rebalancing.
+
+      - name: consecutive_trading_days
+        description: |
+          Running count of days this ticker has been in the dataset.
+          Resets if ticker leaves and re-enters index.
+
+      - name: yesterday_close
+        description: |
+          Previous trading day's closing price.
+          Handles weekends/holidays correctly.
+          NULL for first appearance in index.
+
+      - name: is_new_to_index
+        description: |
+          Binary flag for index additions.
+          1 = First day in Russell 3000
+          0 = Existing constituent
+
+    tests:
+      - unique:
+          column_name: "CONCAT(ticker, '-', CAST(trade_date AS STRING))"
+          config:
+            where: "trade_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+               
+      # Data quality test
+      - dbt_expectations.expect_column_values_to_be_between:
+          column_name: index_weight
+          min_value: 0
+          max_value: 10  # No single stock should be >10% of index

@@ -1,0 +1,7 @@
+pandas
+pandas-market-calendars
+requests
+pyarrow
+pyspark
+dbt-core==1.10.11
+dbt-bigquery==1.10.2

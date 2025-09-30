@@ -1,0 +1,16 @@
+# Ignore everything by default
+**
+
+# Allow specific directories and files needed for the Airflow image
+!dags/
+!plugins/
+!Dockerfile
+!requirements.txt
+!spark_jobs/
+!config/
+!src/
+!keys/
+!dbt/
+
+
+

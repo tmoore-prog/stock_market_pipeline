@@ -1,0 +1,17 @@
+models:
+  - name: stg_daily_stocks
+    description: One record per ticker and trade_date
+    columns: 
+      - name: ticker
+        data_tests:
+          - not_null
+      - name: trade_date
+        data_tests:
+          - not_null
+  - name: stg_russell_3000__constituents
+    description: One record per ticker and valid time period
+    columns:
+      - name: ticker
+        data_tests:
+          - not_null
+      
