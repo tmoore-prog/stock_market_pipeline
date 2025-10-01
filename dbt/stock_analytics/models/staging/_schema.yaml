@@ -1,17 +1,57 @@
 models:
   - name: stg_daily_stocks
-    description: One record per ticker and trade_date
-    columns: 
-      - name: ticker
-        data_tests:
-          - not_null
-      - name: trade_date
-        data_tests:
-          - not_null
-  - name: stg_russell_3000__constituents
-    description: One record per ticker and valid time period
+    description: "Staging table for daily stock market data with basic validation flags"
     columns:
       - name: ticker
-        data_tests:
+        description: "Stock ticker symbol"
+        tests:
           - not_null
       
+      - name: trade_date
+        description: "Trading date"
+        tests:
+          - not_null
+      
+      - name: volume
+        description: "Trading volume"
+      
+      - name: volume_weighted_avg
+        description: "Volume-weighted average price"
+      
+      - name: open
+        description: "Opening price"
+      
+      - name: close
+        description: "Closing price"
+      
+      - name: high
+        description: "Highest price"
+      
+      - name: low
+        description: "Lowest price"
+      
+      - name: num_transactions
+        description: "Number of transactions"
+      
+      - name: ingested_at
+        description: "Timestamp when data was ingested"
+      
+      - name: has_volume
+        description: "Flag indicating if the record has trading volume (1 = yes, 0 = no)"
+      
+      - name: is_valid_record
+        description: "Flag indicating if OHLC prices are valid and consistent (1 = valid, 0 = invalid)"
+
+  - name: stg_russell_3000__constituents
+    description: "Historical Russell 3000 index constituents with temporal validity periods"
+    columns:
+      - name: ticker
+        description: "Stock ticker symbol"
+        tests:
+          - not_null
+      
+      - name: company
+        description: "Company name"
+      
+      - name: sector
+        description: "Industry sector"

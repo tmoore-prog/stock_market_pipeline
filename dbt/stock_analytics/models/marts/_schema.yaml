@@ -29,8 +29,9 @@ models:
           Used to confirm price movements and calculate relative volume.
         tests:
           - dbt_utils.accepted_range:
-              min_value: 0
-              inclusive: false
+              arguments:
+                min_value: 0
+                inclusive: false
 
       - name: open
         description: Opening price for the trading day
@@ -107,9 +108,10 @@ models:
           < 1.0 = Below average (decreased interest)
         tests:
           - dbt_expectations.expect_column_min_to_be_between:
-              min_value: 0
-              row_condition: "rel_vol IS NOT NULL"
-              strictly: true
+              arguments:
+                min_value: 0
+                row_condition: "rel_vol IS NOT NULL"
+                strictly: true
 
       - name: avg_gain_14
         description: |
@@ -117,8 +119,9 @@ models:
           Only includes positive price movements.
         tests:
           - dbt_expectations.expect_column_min_to_be_between:
-              min_value: 0
-              row_condition: "avg_gain_14 IS NOT NULL"
+              arguments:
+                min_value: 0
+                row_condition: "avg_gain_14 IS NOT NULL"
               
       - name: avg_loss_14
         description: |
@@ -126,8 +129,9 @@ models:
           Only includes negative price movements.
         tests:
           - dbt_expectations.expect_column_min_to_be_between:
-              min_value: 0
-              row_condition: "avg_loss_14 IS NOT NULL"
+              arguments:
+                min_value: 0
+                row_condition: "avg_loss_14 IS NOT NULL"
 
       - name: rsi 
         description: |
@@ -186,8 +190,9 @@ models:
           < 0.2 = Strong bearish breadth
         tests:
           - dbt_expectations.expect_column_min_to_be_between:
-              min_value: 0
-              row_condition: "pct_market_over_sma20 IS NOT NULL"
+              arguments:
+                min_value: 0
+                row_condition: "pct_market_over_sma20 IS NOT NULL"
       
       - name: market_rsi
         description: |
@@ -195,10 +200,11 @@ models:
           > 70 = Market overbought
           < 30 = Market oversold
         tests:
-          - dbt_expectations.expect_column_values_to_be_between:
-              min_value: 0
-              max_value: 100
-              row_condition: "market_rsi IS NOT NULL"
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 100
+                inclusive: false
 
       - name: ad_line
         description: |
@@ -212,28 +218,42 @@ models:
           Range: -1 to +1
           > 0.6 = Broad rally
           < -0.6 = Broad decline
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: -1
+                max_value: 1
+                inclusive: false
 
       - name: up_volume
         description: |
           Total trading volume for advancing stocks.
           Used with down_volume to calculate volume ratios.
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              min_value: 0
+              row_condition: "up_volume IS NOT NULL"
 
       - name: down_volume
         description: |
           Total trading volume for declining stocks.
           Used with up_volume to calculate volume ratios.
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              arguments:
+                min_value: 0
+                row_condition: "down_volume IS NOT NULL"
 
       - name: up_down_volume_ratio
         description: |
           Volume in advancing stocks / Volume in declining stocks.
           > 2.0 = Strong buying pressure
           < 0.5 = Strong selling pressure
-
-      - name: new_highs
-        description: Count of stocks hitting 52-week highs
-
-      - name: new_lows
-        description: Count of stocks hitting 52-week lows
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              arguments:
+                min_value: 0
+                row_condition: "down_volume IS NOT NULL AND up_volume IS NOT NULL"
 
       - name: high_low_index
         description: |
@@ -241,6 +261,12 @@ models:
           10-day smoothed average.
           > 0.7 = Bullish momentum
           < 0.3 = Bearish momentum
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: false
 
   - name: dim_securities_current
     description: |
@@ -292,6 +318,11 @@ models:
           Distance from 52-week high as percentage.
           0.10 = 10% below recent high
           Indicates momentum and potential resistance.
+        tests:
+          - dbt_expectations.expect_column_min_to_be_between:
+              arguments:
+                min_value: 0
+                row_condition: "pct_distance_from_52week_high IS NOT NULL"
 
       - name: volatility_20d
         description: |
@@ -305,6 +336,12 @@ models:
           Rank vs all stocks (1-month return).
           0.90 = Top 10% performer
           0.10 = Bottom 10% performer
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
 
       - name: outperformance_vs_sector
         description: |
