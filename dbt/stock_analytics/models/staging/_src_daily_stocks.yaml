@@ -1,0 +1,12 @@
+sources:
+  - name: raw_market
+    database: dbt-learning-project-471822
+    tables:
+      - name: daily_stocks
+  - name: staging_russell_3000
+    database: dbt-learning-project-471822
+    tables:
+      - name: russell3000_2024_1231
+      - name: russell3000_2025_0630
+      - name: russell3000_2025_0829
+      - name: russell3000_2025_0916

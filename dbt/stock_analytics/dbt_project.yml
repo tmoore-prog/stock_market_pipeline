@@ -37,7 +37,6 @@ seeds:
 
 models:
   stock_analytics:
-    # Config indicated by + and applies to all files under models/staging/
     staging:
       +schema: staging  # Goes to 'staging' dataset
     intermediate:
