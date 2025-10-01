@@ -169,9 +169,9 @@ dbt test # Runs all tests
 
 dbt test --select fct_trading_momentum # Example of running specific model tests
 ```
-### Customer singular dbt tests include:
-- RSIrange validation (0-100)
-- Golden/Death Corss mutual exclusivity
+### Custom singular dbt tests include:
+- RSI range validation (0-100)
+- Golden/Death Cross mutual exclusivity
 - Advances/Declines/Unchanged totals reconciliation
 
 ## 📊 Data Quality
@@ -229,9 +229,9 @@ ORDER BY sector, return_1m DESC;
 
 ## 🔧 Configuration
 ### Adjusting Pipeline Schedule
-Edit `airflow/dags/,arket_data_piple_dag.py`:
+Edit `airflow/dags/market_data_pipeline_dag.py`:
 ```python
-schedule='0 12 * * 2-6' # This runs daily, Tuesday-Saturday at 1200, extracts data from previous trading day thru sub 2 years
+schedule='0 12 * * 2-6' # This runs daily, Tuesday-Saturday at 1200, extracts data from previous trading day
 ```
 ### Modifying Technical Indicators
 Edit macros in `dbt/stock_analytics/macros/`:
