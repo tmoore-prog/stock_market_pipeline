@@ -7,10 +7,6 @@ version: '1.0.0'
 
 # This setting configures which "profile" dbt uses for this project.
 profile: 'stock_analytics'
-<<<<<<< HEAD
-=======
-
->>>>>>> 299fd66 (Reorganized files and initialized a dbt project in root folder dbt/. Added seed files for Russell 3000 filtering)
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
 # found in the "models/" directory. You probably won't need to change these!
