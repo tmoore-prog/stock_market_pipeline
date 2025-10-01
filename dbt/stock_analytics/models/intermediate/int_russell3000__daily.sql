@@ -11,7 +11,7 @@ WITH russell_3000 AS (
 ),
 
 full_market AS (
-    SELECT * FROM {{ ref('stg_daily_stocks') }}
+    SELECT DISTINCT * FROM {{ ref('stg_daily_stocks') }}
     {% if is_incremental() %}
     WHERE trade_date >= (SELECT DATE_SUB(MAX(trade_date), INTERVAL 4 DAY) FROM {{ this }})
     {% endif %}
@@ -27,9 +27,10 @@ russell3000_daily AS (
     INNER JOIN russell_3000
         ON full_market.ticker = russell_3000.ticker 
         AND full_market.trade_date BETWEEN russell_3000.valid_from AND russell_3000.valid_to
-),
+)
 
 {% if is_incremental() %}
+,
 prev_closes AS (
     SELECT 
         ticker, 

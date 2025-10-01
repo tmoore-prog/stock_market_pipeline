@@ -199,8 +199,8 @@ dbt docs serve
 ```sql
 -- Find most recent golden crosses
 SELECT ticker, company, sector
-FROM `analytics.fct_trading_momentum`
-WHERE trade_date = (SELECT MAX(trade_date) FROM `analytics.fct_trading_momentum`)
+FROM `your_project.analytics.fct_trading_momentum`
+WHERE trade_date = (SELECT MAX(trade_date) FROM `your_project.analytics.fct_trading_momentum`)
   AND golden_cross = 1;
 
 -- Market breadth analysis
@@ -213,7 +213,7 @@ SELECT
     WHEN pct_market_over_sma50 < 0.2 THEN 'Strong Bearish'
     ELSE 'Neutral'
   END as market_sentiment
-FROM `analytics.agg_daily_market_breadth`
+FROM `your_project.analytics.agg_daily_market_breadth`
 WHERE trade_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY);
 
 -- Top performing stocks by sector
@@ -222,7 +222,7 @@ SELECT
   ticker,
   return_1m,
   outperformance_vs_sector
-FROM `analytics.dim_securities_current`
+FROM `your_project.analytics.dim_securities_current`
 WHERE performance_percentile > 0.9
 ORDER BY sector, return_1m DESC;
 ```

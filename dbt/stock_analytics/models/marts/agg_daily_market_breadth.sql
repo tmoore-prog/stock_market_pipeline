@@ -7,7 +7,7 @@ WITH base_aggregates AS (
         trade_date,
         COUNT(DISTINCT ticker) as stocks_traded,
         SUM(CASE
-                WHEN close = yesterday_close AND yesterday_close IS NOT NULL
+                WHEN close = yesterday_close OR yesterday_close IS NULL
                 THEN 1 
                 ELSE 0
                 END
