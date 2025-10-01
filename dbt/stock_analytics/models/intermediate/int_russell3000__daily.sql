@@ -12,10 +12,8 @@ WITH russell_3000 AS (
 
 full_market AS (
     SELECT * FROM {{ ref('stg_daily_stocks') }}
-     {% if is_incremental() %}
-
+    {% if is_incremental() %}
     WHERE trade_date >= (SELECT DATE_SUB(MAX(trade_date), INTERVAL 4 DAY) FROM {{ this }})
-
     {% endif %}
 ),
 
@@ -31,6 +29,7 @@ russell3000_daily AS (
         AND full_market.trade_date BETWEEN russell_3000.valid_from AND russell_3000.valid_to
 ),
 
+{% if is_incremental() %}
 prev_closes AS (
     SELECT 
         ticker, 
@@ -42,6 +41,7 @@ prev_closes AS (
     FROM {{ this }}
     WHERE trade_date >= (SELECT DATE_SUB(MIN(trade_date), INTERVAL 10 DAY) FROM full_market)
 )
+{% endif %}
 
 SELECT 
     r.*,
@@ -49,18 +49,27 @@ SELECT
         PARTITION BY r.ticker
         ORDER BY r.trade_date
     ) as consecutive_trading_days,
+    {% if is_incremental() %}
     COALESCE(
         LAG(r.close, 1) OVER (
             PARTITION BY r.ticker
             ORDER BY r.trade_date
         ), p.prev_close
     ) as yesterday_close,
+    {% else %}
+    LAG(r.close, 1) OVER (
+        PARTITION BY r.ticker
+        ORDER BY r.trade_date
+    ) as yesterday_close,
+    {% endif %}
     CASE 
         WHEN LAG(r.ticker) OVER (PARTITION BY r.ticker ORDER BY r.trade_date) IS NULL 
         THEN 1 
         ELSE 0 
     END as is_new_to_index
 FROM russell3000_daily as r
+{% if is_incremental() %}
 LEFT JOIN prev_closes as p
     ON r.ticker = p.ticker   
     AND r.trade_date = p.trade_date
+{% endif %}
