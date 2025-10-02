@@ -275,7 +275,7 @@ Edit macros in `dbt/stock_analytics/macros/`:
 Trent Moore
 
 GitHub: @tmoore-prog
-LinkedIn: Trent Moore (https://www.linkedin.com/in/trent-moore-64abb4115)
+LinkedIn: Trent Moore (https://www.linkedin.com/in/trent-moore-data-engineer)
 
 ## 🙏 Acknowledgments
 
