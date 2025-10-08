@@ -1,8 +1,8 @@
-# 📈 Stock Market Analytics Pipeline
+# Stock Market Analytics Pipeline
 
 A production-grade data pipeline that ingests, transforms, and analyzes 5.3+ million rows of daily U.S. equity market data, focusing on Russell 3000 constituents. Built with modern data engineering best practices using Apache Airflow, dbt, and Google BigQuery.
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 ```mermaid
 graph LR
     A[Polygon API] -->|Daily Extract| B[Apache Airflow]
@@ -13,7 +13,7 @@ graph LR
     F --> G[BI Tools/Analysis]
 ```
 
-## 📊 Key Metrics
+## Key Metrics
 
 - Data Volume: 5.3+ million rows (11,000+ stocks × 500+ trading days)
 - Daily Processing: ~11,000 new records
@@ -22,7 +22,7 @@ graph LR
 - Historical Depth: 2+ years of trading data
 - Pipeline Runtime: ~15 minutes end-to-end
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 - Orchestration: Apache Airflow 2.8+
 - Data Warehouse: Google BigQuery
@@ -31,7 +31,7 @@ graph LR
 - Containerization: Docker & Docker Compose
 - Language: Python 3.10+, SQL
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 stock_market_pipeline/
@@ -59,7 +59,7 @@ stock_market_pipeline/
 
 ```
 
-## 🎯 Data Models
+## Data Models
 
 ### Staging Layer
 
@@ -95,7 +95,7 @@ Latest snapshot per ticker with:
 - Sector comparisons
 - Volatility measurements
 
-## 🚀 Getting Started
+## Getting Started
 ### Prerequisites
 - Docker & Docker Compose
 - Google Cloud Platform account with BigQuery enabled
@@ -147,7 +147,7 @@ dbt seed # Load Russell 3000 constiuent data
 # Runs daily at 1200 EST while container is active
 ```
 
-## 🔄 Pipeline Workflow
+## Pipeline Workflow
 ### Daily Pipeline (market_data_pipeline)
 
 1. Extract: Fetch previous trading day data from Polygon API
@@ -162,7 +162,7 @@ dbt seed # Load Russell 3000 constiuent data
 - Data Quality Tests: 10+ custom tests ensure data integrity
 - Point-in-Time Accuracy: Handles Russell 3000 rebalancing
 
-## 🧪 Testing
+## Testing
 ```bash
 cd dbt/stock_analytics
 dbt test # Runs all tests
@@ -174,13 +174,13 @@ dbt test --select fct_trading_momentum # Example of running specific model tests
 - Golden/Death Cross mutual exclusivity
 - Advances/Declines/Unchanged totals reconciliation
 
-## 📊 Data Quality
+## Data Quality
 - Validation: Automatic detection of impossible price movements
 - Freshness Checks: Alerts if data is >2 days old <-wip
 - Completeness: Monitors for missing tickers or trading days
 - Consistency: Validates technical indicator calculations
 
-## 🎨 dbt Documentation
+## dbt Documentation
 ```bash
 # Generate and serve dbt documentation
 cd dbt/stock_analytics
@@ -190,12 +190,12 @@ dbt docs serve
 # Note: Must be done while Airflow container/Airflow UI is not running
 ```
 
-## 🚦 Monitoring
+## Monitoring
 - Airflow UI: http://localhost:8080
 - BigQuery Console: Monitor query performance and costs
 - dbt Artifacts: Execution logs in `target/` directory
 
-## 💡 Example Queries (BigQuery Console)
+## Example Queries (BigQuery Console)
 ```sql
 -- Find most recent golden crosses
 SELECT ticker, company, sector
@@ -227,7 +227,7 @@ WHERE performance_percentile > 0.9
 ORDER BY sector, return_1m DESC;
 ```
 
-## 🔧 Configuration
+## Configuration
 ### Adjusting Pipeline Schedule
 Edit `airflow/dags/market_data_pipeline_dag.py`:
 ```python
@@ -239,7 +239,7 @@ Edit macros in `dbt/stock_analytics/macros/`:
 - `calculate_sma.sql` - Adjust moving average periods
 - `calculate_return.sql` - Modify return calculations
 
-## 🐛 Troubleshooting
+## Troubleshooting
 | Issue | Solution |
 |---|---|
 | Protobuf errors | Run `pip install --upgrade --force-reinstall protobuf` |
@@ -247,13 +247,13 @@ Edit macros in `dbt/stock_analytics/macros/`:
 | Rate limit hit | Check Polygon API quota, readjust sleep timers |
 | Memory issues | Increase Docker memory allocation |
 
-## 📈 Performance Optimizations
+## Performance Optimizations
 - Partitioned Tables: Daily partitions on trade_date
 - Clustered by Ticker: Optimizes ticker-specific queries
 - Incremental Models: Process only new data
 - Lookback Windows: 4-7 day windows for late-arriving data
 
-## 🚀 Future Enhancements
+## Future Enhancements
  - Streamlit dashboard for visualization
  - Machine learning features mart
  - Options data integration
@@ -261,23 +261,23 @@ Edit macros in `dbt/stock_analytics/macros/`:
  - Kubernetes deployment
  - Data quality alerting via Slack
 
-## 📝 License
+## License
 ### MIT License - see LICENSE file for details
 
-## 🤝 Contributing
+## Contributing
 1. Fork the repository
 2. Create a feature branch (git checkout -b feature/amazing-feature)
 3. Commit changes (git commit -m 'Add amazing feature')
 4. Push to branch (git push origin feature/amazing-feature)
 5. Open a Pull Request
 
-## 👤 Author
+## Author
 Trent Moore
 
 GitHub: @tmoore-prog
 LinkedIn: Trent Moore (https://www.linkedin.com/in/trent-moore-data-engineer)
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Polygon.io for market data API
 - dbt Labs for the transformation framework
