@@ -212,7 +212,7 @@ models:
           Rising = Healthy market breadth
           Divergence from index = Warning signal
 
-      - name: normalized_ad_ratio
+      - name: ad_percentage
         description: |
           (Advances - Declines) / Total Stocks.
           Range: -1 to +1

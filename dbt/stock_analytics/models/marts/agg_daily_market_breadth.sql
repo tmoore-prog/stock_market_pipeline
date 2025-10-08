@@ -107,7 +107,8 @@ all_aggs AS (
             WHEN (b.advances + b.declines + b.unchanged_stocks) > 0
             THEN ((b.advances - b.declines) / (b.advances + b.declines + b.unchanged_stocks)) 
             ELSE NULL
-        END as normalized_ad_ratio,
+        END as ad_percentage,
+        SAFE_DIVIDE(b.advances, b.declines) as ad_ratio,
         CASE
             WHEN (b.up_volume IS NOT NULL AND b.up_volume != 0) AND (b.down_volume IS NOT NULL AND b.down_volume != 0)
             THEN b.up_volume / b.down_volume

@@ -20,7 +20,7 @@ def market_data_pipeline():
     @task.bash
     def run_dbt_staging():
         return '''cd /opt/airflow/dbt/stock_analytics && \
-            dbt run --select staging --profiles-dir . 
+            dbt run --select staging --profiles-dir .
         '''
 
     @task.bash
