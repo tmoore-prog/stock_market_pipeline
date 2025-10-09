@@ -43,21 +43,38 @@ stock_market_pipeline/
 ├── dbt/
 │   └── stock_analytics/
 │       ├── models/
-│       │   ├── staging/         # Raw data cleaning layer
-│       │   ├── intermediate/    # Russell 3000 filtered data
-│       │   └── marts/           # Analytics-ready tables
-│       ├── macros/              # Reusable SQL functions
-│       ├── seeds/               # Russell 3000 constituent lists
-│       └── tests/               # Data quality tests
-└── src/
-    ├── bigquery_client.py            # BigQuery operations
-    ├── extraction.py                 # Polygon API interface
-    ├── extract_load_polygon_data.py  # Main ETL logic
-    ├── config.py                     # Environmental variables loading logic
-    ├── load.py                       # Logic to load data to BigQuery
-    └── utils.py                      # Misc. utility logic
-
+│       │   ├── staging/              # Raw data cleaning layer
+│       │   ├── intermediate/         # Russell 3000 filtered data
+│       │   └── marts/                # Analytics-ready tables
+│       ├── macros/                   # Reusable SQL functions
+│       ├── seeds/                    # Russell 3000 constituent lists
+│       └── tests/                    # Data quality tests
+├── src/
+│   ├── bigquery_client.py            # BigQuery operations
+│   ├── extraction.py                 # Polygon API interface
+│   ├── extract_load_polygon_data.py  # Main ETL logic
+│   ├── config.py                     # Environmental variables loading logic
+│   ├── load.py                       # Logic to load data to BigQuery
+│   └── utils.py                      # Misc. utility logic
+└── streamlit_app/
+    ├── pages/                        # Pages for Streamlit App
+    │   ├── 1_Market_Overview.py      # Page displaying general Market performance
+    │   ├── In progress ....
+    │   └── 3_Stock_Screener.py       # Page displaying latest metrics and screening filters
+    ├── utilities/
+    │    └── helper.py                # Helper functions for querying BigQuery
+    └── streamlit_app.py              # Entrypoint file for Streamlit app  
 ```
+
+## Known Limitations
+
+### Corporate Actions Handling
+- **Current State:** Historical data loaded on 9/18/25 is adjusted for splits/dividends up to that date via Polygon's adjusted data
+- **Gap:** Splits/dividends occurring after initial load (e.g., 9/19/25+) are not retroactively applied to historical records
+- **Impact:** Technical indicators (RSI, moving averages) may show anomalies for affected stocks
+- **Planned Fix:** Implement daily corporate actions API check with retroactive adjustment logic
+
+**Example:** A stock that split 10:1 on 9/19/25 will show artificially low RSI (~1.2) because pre-split prices aren't adjusted to post-split scale.
 
 ## Data Models
 
@@ -254,7 +271,7 @@ Edit macros in `dbt/stock_analytics/macros/`:
 - Lookback Windows: 4-7 day windows for late-arriving data
 
 ## Future Enhancements
- - Streamlit dashboard for visualization
+ - Streamlit dashboard for visualization -- In Progress
  - Machine learning features mart
  - Options data integration
  - Real-time streaming pipeline
