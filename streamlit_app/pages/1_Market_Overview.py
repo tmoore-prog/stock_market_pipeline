@@ -17,7 +17,7 @@ chart_df = df.sort_values('trade_date', ascending=True)
 
 
 def make_column_metric(metric, col, percent=False):
-    title = metric.replace('_', ' ').title()
+    title = metric.replace('_', ' ').upper()
     latest_metric = df[metric].iloc[0]
     prev_metric = df[metric].iloc[1]
     if percent:
@@ -45,5 +45,7 @@ make_column_metric('ad_ratio', col4)
 make_column_metric('ad_line', col5)
 make_column_metric('up_down_volume_ratio', col6)
 
+st.caption('A/D Line is calculated using data from 09/18/2023 to '
+           'present so numbers may differ')
 st.caption('Up/Down Volume Ratio is a single-day metric rather than '
            'the common 50-day rolling ratio')

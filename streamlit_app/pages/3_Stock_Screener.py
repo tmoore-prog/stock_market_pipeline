@@ -22,4 +22,9 @@ query = f"""
 
 results = query_bigquery(query)
 
+st.warning('''WARNING! Known Limitations: This model currently does not \
+           account for corporate actions taken after historical data load \
+           such as splits and dividends. This may cause anomalies in metrics \
+           requiring lookback windows such as RSI. A fix to this issue is in \
+           progress.''', icon='⚠️')
 st.dataframe(results, width='stretch')
